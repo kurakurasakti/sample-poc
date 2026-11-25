@@ -1,0 +1,36 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidStorageSegment(seg) {
+      return seg is string && seg.size() > 0 && seg.size() <= 128 && seg.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidImageUpload() {
+      return request.resource != null
+        && request.resource.size > 0
+        && request.resource.size <= 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*')
+        && request.resource.metadata != null
+        && request.resource.metadata.uploadedById == request.auth.uid;
+    }
+
+    // Default deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+
+    // Component-scoped & general session evidence inside workspace boundary
+    match /workspaces/{workspaceId}/inspections/{sessionId}/{allEvidence=**} {
+      allow read: if isSignedIn() && isValidStorageSegment(workspaceId) && isValidStorageSegment(sessionId);
+      allow create: if isSignedIn()
+        && isValidStorageSegment(workspaceId)
+        && isValidStorageSegment(sessionId)
+        && isValidImageUpload();
+      allow update, delete: if false;
+    }
+  }
+}

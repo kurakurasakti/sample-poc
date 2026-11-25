@@ -1,0 +1,6 @@
+{
+  "name": "Conveyor Inspection Tracker",
+  "description": "Industrial conveyor asset and inspection tracking system with condition monitoring, photo evidence capture, and damaged component alerts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

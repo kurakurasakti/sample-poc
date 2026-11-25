@@ -1,0 +1,1294 @@
+# PROMPT 08 — FINAL TECHNICAL REMEDIATION & COMPREHENSIVE TEST COVERAGE
+
+## ROLE
+
+Act as a Principal Software Architect, Senior Firebase Security Engineer, Enterprise CMMS Product Architect, QA Automation Architect, and Application Security Specialist.
+
+You are continuing the development of the existing document:
+
+**ENTERPRISE ARCHITECTURE SPECIFICATION V2.1 — Final Consistency, Security & Implementation Readiness Edition**
+
+This is a continuation and correction task.
+
+Do NOT create a new architecture version.
+
+Do NOT rename the architecture to V2.2, V2.3, V3.0, or any other new version.
+
+V2.1 remains the official architecture baseline.
+
+Your task is to refine and correct the existing V2.1 document in place, close the remaining technical and security gaps, and produce a comprehensive test specification covering the entire CMMS product.
+
+The final result must be a consolidated, corrected V2.1 specification and a complete test coverage package.
+
+---
+
+# 1. PRIMARY OBJECTIVES
+
+Complete the following objectives:
+
+1. Correct all remaining technical weaknesses identified in the V2.1 review.
+2. Ensure that Firestore Security Rules and Firebase Storage authorization are technically valid.
+3. Ensure that backend operations enforce all critical business and security invariants.
+4. Ensure that every business feature has defined functional behavior.
+5. Ensure that every user role has clearly defined permissions.
+6. Create comprehensive positive, negative, boundary, concurrency, and failure test cases.
+7. Create realistic end-to-end scenarios demonstrating the entire product.
+8. Ensure that all test cases are traceable to requirements, architecture components, and application features.
+9. Identify anything that remains unresolved before implementation.
+
+The final output must be practical for a beginner-friendly implementation process using Google AI Studio Build Mode, React, Firebase Authentication, Cloud Firestore, Firebase Storage, and trusted backend functions.
+
+Avoid unnecessary infrastructure or technology changes.
+
+---
+
+# 2. PRESERVE THE EXISTING BUSINESS AND PRODUCT ARCHITECTURE
+
+Do not redesign or remove the existing business requirements.
+
+Preserve these core concepts:
+
+## 2.1 Dual Operating Business Model
+
+The platform supports two operating modes:
+
+**A. Managed Service**
+
+The platform owner's company supplies qualified inspection or maintenance manpower to customer companies.
+
+The customer uses the platform to:
+
+- Monitor inspections.
+- Review findings.
+- Track asset conditions.
+- Review maintenance progress.
+- Monitor work orders.
+- Access operational reports.
+
+The service provider manages its assigned personnel and service-related information.
+
+**B. Self-Managed SaaS**
+
+The customer subscribes to the software and uses its own inspection and maintenance team.
+
+The customer does not need to purchase manpower services from the platform owner.
+
+Both modes must use the same core platform and data architecture.
+
+## 2.2 Multi-Company Collaboration
+
+Preserve:
+
+- One user can belong to multiple organizations.
+- One organization can participate in multiple workspaces.
+- Multiple service providers can collaborate within one customer workspace.
+- Each provider has defined operational responsibilities and access scopes.
+- A provider must not see another provider's confidential commercial information.
+- Customer-owned operational history remains available to the customer after provider termination.
+
+## 2.3 Independent Commercial Lifecycles
+
+Keep the following independent:
+
+- Workspace lifecycle.
+- Service Engagement lifecycle.
+- Software Subscription lifecycle.
+- Provider Collaboration lifecycle.
+
+One lifecycle must not unintentionally destroy data or permissions governed by another lifecycle.
+
+## 2.4 Asset and Inspection Governance
+
+Preserve:
+
+- Customer ownership of physical assets where applicable.
+- Separate asset ownership and operational responsibility.
+- Multiple providers assigned to different asset components.
+- Immutable finalized inspection records.
+- Corrections through inspection addendums.
+- Full operational audit history.
+
+---
+
+# 3. FINAL TECHNICAL REMEDIATION
+
+Review the complete V2.1 document and correct the following areas.
+
+Do not merely explain the problems. Provide the corrected technical design and implementation-ready examples.
+
+## 3.1 Firestore Security Rules
+
+Correct all Firestore Security Rules.
+
+Requirements:
+
+- Default deny.
+- Separate read, create, update, and delete authorization.
+- Validate organization membership.
+- Validate workspace membership.
+- Validate organization collaboration status.
+- Validate resource-level responsibility where applicable.
+- Validate role and permission.
+- Validate immutable fields.
+- Validate allowed field changes using `diff().affectedKeys()`.
+- Validate allowed state transitions.
+- Prevent cross-workspace and cross-organization access.
+- Prevent unauthorized document creation and ownership reassignment.
+- Prevent direct client writes to backend-controlled records.
+
+Explicitly correct the previously identified weaknesses in:
+
+- `/work_orders`
+- `/work_order_financials`
+- `/inventory_items`
+- `/inventory_valuations`
+- `/inspections`
+- `/inspection_findings`
+- `/inspection_addendums`
+- `/stock_reservations`
+- `/stock_movements`
+- `/audit_logs`
+- `/workspace_invitations`
+- `/service_engagements`
+- `/software_subscriptions`
+- `/system_counters`
+
+Also review every other collection in the existing V2.1 collection catalog.
+
+For every collection, define:
+
+- Read rules.
+- Create rules.
+- Update rules.
+- Delete rules.
+- Immutable fields.
+- Backend-only fields.
+- Required role.
+- Workspace and organization scope.
+- Parent-child relationship validation.
+
+Important:
+
+Do not use broad rules such as `allow read, write` when create and update require different validation.
+
+Do not assume frontend restrictions provide security.
+
+Do not assume Firestore Security Rules can filter individual fields within a document.
+
+If a rule depends on another document, consider Firestore Rules document-access call limits and query limitations.
+
+Explain any limitations and provide the safest practical implementation.
+
+## 3.2 Active Organization Context and Revocation
+
+Correct the active organization switching mechanism.
+
+Requirements:
+
+- A client-selected organization is never sufficient authorization.
+- A trusted backend validates organization membership.
+- Workspace membership and collaboration status are independently validated.
+- Stale custom claims must not preserve unauthorized access.
+- Revoked users must not retain access merely because their previous token has not expired.
+- Explain token refresh behavior.
+- Explain how authorization changes are propagated.
+- Explain how offline devices behave after membership revocation.
+
+Provide a complete organization-switching and authorization flow.
+
+## 3.3 Firebase Storage Security
+
+Correct the upload and download architecture.
+
+Explicitly distinguish:
+
+A. Direct upload.
+
+B. Authorized download.
+
+C. File replacement.
+
+D. File deletion.
+
+E. Offline upload recovery.
+
+F. Orphan cleanup.
+
+For every operation, define:
+
+- Authentication.
+- Organization membership.
+- Workspace membership.
+- Resource authorization.
+- File size and MIME validation.
+- Storage path validation.
+- Upload ownership.
+- File-to-inspection relationship.
+- Access revocation behavior.
+
+Important technical constraints:
+
+Firebase Storage Security Rules cannot directly query Cloud Firestore membership documents.
+
+Do not create invalid Storage Rules that attempt to use Firestore `get()` or `exists()`.
+
+If using signed URLs:
+
+- Explain bearer-token characteristics.
+- Define expiration.
+- Explain revocation limitations.
+- Validate the requested storage path against the authorized parent resource.
+- Prevent arbitrary storage path requests.
+- Explain how URL leakage is mitigated.
+
+If direct uploads use metadata or custom claims, explain what those mechanisms can and cannot guarantee.
+
+Provide corrected example Storage Rules and backend authorization flows.
+
+## 3.4 Inspection Finalization and Immutability
+
+Define the exact finalization workflow.
+
+Requirements:
+
+- Only authorized inspectors can submit inspections.
+- Draft edits must be restricted to the authorized author or permitted role.
+- Critical identity fields cannot be changed by the client.
+- Client cannot directly finalize an inspection.
+- Trusted backend validates all required fields.
+- Finalization is atomic and idempotent.
+- Concurrent finalization requests cannot create duplicate records.
+- Finalized inspections cannot be edited or deleted through client operations.
+- Corrections must use addendums.
+- Every important action is audited.
+
+Define the complete lifecycle:
+
+`Draft → Submitted → Validated → Finalized`
+
+If a different lifecycle is more appropriate, explain why.
+
+Define how the system handles:
+
+- Missing checklist items.
+- Missing mandatory photos.
+- Invalid asset references.
+- Duplicate submissions.
+- Concurrent requests.
+- Network failure.
+- Retried requests.
+- Revoked users.
+- Failed finalization.
+
+Provide backend transaction examples and matching Security Rules.
+
+## 3.5 Idempotency and Concurrency
+
+Correct the idempotency mechanism.
+
+Do not rely on:
+
+1. Querying for an existing idempotency key.
+2. Finding no record.
+3. Creating a new record.
+
+This alone does not prevent simultaneous requests from creating duplicates.
+
+Define a robust atomic mechanism using a deterministic idempotency document or equivalent transactional approach.
+
+Specify:
+
+- Idempotency key generation.
+- Trusted validation.
+- Uniqueness scope.
+- Atomic creation.
+- Request payload consistency.
+- Retry behavior.
+- Response replay.
+- Expiration or retention policy.
+
+Apply this to important operations:
+
+- Inspection finalization.
+- Work order creation.
+- Inventory reservation.
+- Inventory consumption.
+- Addendum submission.
+- Other operations where duplicate requests could cause financial or operational problems.
+
+## 3.6 Work Order State and Field Validation
+
+Define a complete Work Order state transition matrix.
+
+For each transition, specify:
+
+- Current state.
+- Allowed next state.
+- Authorized organization.
+- Required role.
+- Required conditions.
+- Required fields.
+- Backend operation, if applicable.
+- Audit event.
+
+Example states may include:
+
+`draft → pending_approval → approved → in_progress → verification → closed`
+
+Also define cancellation and rejection behavior.
+
+Prevent users from skipping required transitions.
+
+Prevent a user from changing unrelated or protected fields during a valid status transition.
+
+Ensure the customer and assigned provider have distinct operational permissions.
+
+## 3.7 Inventory Transaction Completeness
+
+Complete the inventory lifecycle.
+
+Include:
+
+- Stock receiving.
+- Stock reservation.
+- Reservation release.
+- Stock consumption.
+- Stock return.
+- Stock adjustment.
+- Stock transfer, if supported.
+- Consignment reconciliation.
+- Inventory ownership changes, if supported.
+
+For each transaction define:
+
+- Authorization.
+- Preconditions.
+- Quantity validation.
+- Atomic transaction behavior.
+- Ledger entry.
+- Idempotency.
+- Audit logging.
+- Failure recovery.
+
+Prevent negative available stock and unauthorized ownership changes.
+
+Separate operational quantities from confidential valuation information.
+
+Do not claim the inventory ledger is complete if some of these operations are not specified.
+
+## 3.8 Migration and Rollback
+
+Correct the V2.1 migration claims.
+
+Do not claim zero downtime or zero data loss without a proven synchronization mechanism.
+
+Define a safe, non-destructive staged migration:
+
+1. Backup and recovery verification.
+2. Schema mapping.
+3. Shadow data transformation.
+4. Data validation.
+5. Controlled synchronization.
+6. Write freeze or controlled cutover.
+7. Reconciliation.
+8. Cutover approval.
+9. Post-cutover monitoring.
+10. Rollback decision and procedure.
+
+Explicitly explain:
+
+- Which collection is the source of truth during each phase.
+- Whether writes are allowed in legacy and target collections.
+- How new records are synchronized.
+- How updates and deletions are reconciled.
+- What happens if cutover fails.
+- What data must never be deleted during rollback.
+
+Remove unsupported claims such as guaranteed rollback in under 60 seconds.
+
+---
+
+# 4. COMPLETE PRODUCT FEATURE INVENTORY
+
+Create a master feature inventory based on every feature already defined in V2.1.
+
+Do not silently omit features.
+
+At minimum, include:
+
+## A. Authentication and Identity
+
+- Registration.
+- Login.
+- Logout.
+- Email verification.
+- Password recovery.
+- User profile.
+- Organization membership.
+- Multiple organization membership.
+- Active organization switching.
+- User suspension and revocation.
+
+## B. Organization Management
+
+- Organization creation.
+- Organization profile.
+- Organization admin.
+- Organization membership.
+- Member invitation.
+- Member activation.
+- Member suspension.
+- Member removal or offboarding.
+
+## C. Workspace Management
+
+- Workspace creation.
+- Workspace configuration.
+- Managed Service mode.
+- Self-Managed SaaS mode.
+- Workspace administrators.
+- Workspace members.
+- Workspace lifecycle.
+- Site management.
+- Workspace archival.
+
+## D. Multi-Company Collaboration
+
+- Provider invitation.
+- Customer invitation.
+- Target organization acceptance.
+- Collaboration activation.
+- Collaboration suspension.
+- Collaboration revocation.
+- Multiple providers in one workspace.
+- Provider-specific access scope.
+
+## E. Asset Management
+
+- Site hierarchy.
+- Asset registration.
+- Asset details.
+- Asset ownership.
+- Asset custodian.
+- Asset components.
+- Asset responsibilities.
+- Asset condition.
+- Asset operational status.
+- Asset history.
+
+## F. Inspection Management
+
+- Inspection scheduling.
+- Inspection checklist.
+- Checklist status: Good, Fair, Worn, Damaged.
+- Inspection execution.
+- Inspection photos.
+- Findings.
+- Draft inspection.
+- Submission.
+- Finalization.
+- Inspection history.
+- Inspection addendum.
+- Inspection integrity verification.
+
+## G. Work Order Management
+
+- Finding-to-work-order creation.
+- Manual work-order creation.
+- Approval.
+- Assignment.
+- Scheduling.
+- Execution.
+- Parts allocation.
+- Progress tracking.
+- Verification.
+- Customer sign-off.
+- Closure.
+- Cancellation.
+- Work-order history.
+
+## H. Inventory Management
+
+- Inventory item registration.
+- Ownership classification.
+- Warehouse location.
+- Stock quantity.
+- Reservation.
+- Consumption.
+- Return.
+- Adjustment.
+- Stock movement ledger.
+- Consignment management.
+- Stock valuation isolation.
+
+## I. Preventive Maintenance
+
+Include preventive maintenance features only to the extent they are already defined in the existing architecture.
+
+Identify any preventive maintenance functionality that still needs a business decision or technical specification.
+
+Do not invent unsupported functionality.
+
+## J. Reporting and Dashboard
+
+Cover the reports and dashboard features already specified in V2.1.
+
+If a report or dashboard has not been defined, identify it as an unresolved feature requirement rather than inventing its behavior.
+
+## K. Subscription and Service Management
+
+- Service Engagement creation.
+- Service Engagement approval.
+- Service Engagement activation.
+- Renewal.
+- Termination.
+- Software Subscription creation.
+- Subscription activation.
+- Grace period.
+- Read-only state.
+- Suspension.
+- Data export.
+- Provider access revocation.
+- Independent lifecycle behavior.
+
+## L. Offline and Synchronization
+
+- Offline data capture.
+- Local draft persistence.
+- Attachment queue.
+- Synchronization.
+- Retry.
+- Conflict handling.
+- Idempotency.
+- Authorization revocation while offline.
+- Failed upload recovery.
+
+## M. Audit, Security, and Data Governance
+
+- Audit logs.
+- Access revocation.
+- Data retention.
+- Legal hold.
+- Logical deletion.
+- Permanent deletion.
+- Data export.
+- Backup.
+- Recovery.
+
+For every feature, define:
+
+- Feature ID.
+- Feature name.
+- Purpose.
+- Primary actor.
+- Required permission.
+- Preconditions.
+- Main workflow.
+- Expected outcome.
+- Related collections.
+- Backend operation, if applicable.
+- Security considerations.
+- Test case references.
+
+---
+
+# 5. ROLE AND PERMISSION TEST MATRIX
+
+Create a realistic role matrix.
+
+Use the existing RBAC roles from V2.1.
+
+At minimum, examine these user categories:
+
+1. Platform Administrator.
+2. Organization Admin.
+3. Customer Workspace Admin.
+4. Customer Plant Supervisor.
+5. Customer Maintenance Supervisor.
+6. Customer Technician.
+7. Provider Organization Admin.
+8. Provider Workspace Lead.
+9. Provider Inspector.
+10. Provider Technician.
+11. Warehouse Custodian.
+12. Read-Only Auditor.
+
+Do not assume all roles must have the same permissions across Managed Service and Self-Managed modes.
+
+For every role, define permissions for:
+
+- Organization management.
+- Workspace management.
+- Site and asset management.
+- Inspection creation.
+- Inspection review.
+- Inspection finalization.
+- Addendum submission.
+- Work order creation.
+- Work order approval.
+- Work order execution.
+- Work order verification.
+- Inventory operations.
+- Commercial financial data.
+- Reporting.
+- User management.
+- Audit history.
+- Data export.
+
+Use these permission levels:
+
+- No Access.
+- Read.
+- Create.
+- Update.
+- Approve.
+- Execute.
+- Administer.
+- Backend Only.
+
+Clearly distinguish customer, provider, and platform privileges.
+
+---
+
+# 6. COMPREHENSIVE TEST CASE DESIGN
+
+This is one of the most important deliverables.
+
+Create a complete test case library covering the entire feature inventory.
+
+Do not provide only a few high-level examples.
+
+Every test case must contain:
+
+| Field | Description |
+|---|---|
+| Test Case ID | Unique ID |
+| Feature ID | Related feature |
+| Test Category | Functional / Security / Integration / UI / Offline / Performance / Recovery |
+| Priority | Critical / High / Medium / Low |
+| Test Objective | What is being validated |
+| Actor | User role executing the test |
+| Preconditions | Required system state |
+| Test Data | Required records or values |
+| Test Steps | Numbered executable actions |
+| Expected Result | Exact expected behavior |
+| Negative Result | What must be rejected |
+| Related Security Rule | Relevant authorization policy |
+| Related Backend Operation | Relevant trusted operation |
+| Execution Type | Manual / Automated / Both |
+| Execution Status | Not Executed / Passed / Failed / Blocked |
+
+Create test coverage for the following categories.
+
+## 6.1 Functional Tests
+
+Test every feature in the master feature inventory.
+
+Include normal success paths and expected failure paths.
+
+## 6.2 Authorization and Security Tests
+
+Create explicit attack and abuse scenarios.
+
+At minimum:
+
+- Organization A attempts to read Organization B data.
+- Provider A attempts to read Provider B financial records.
+- Provider A attempts to modify Provider B work orders.
+- Unauthorized user attempts to access another workspace.
+- Suspended organization member attempts to access data.
+- Revoked provider attempts to access old workspace records.
+- Client attempts to change `workspaceId`.
+- Client attempts to change `owningOrgId`.
+- Client attempts to change `authorUserId`.
+- Client attempts to change finalized inspection fields.
+- Client attempts to create fake audit logs.
+- Client attempts to manipulate inventory quantities.
+- Client attempts to approve their own unauthorized work order.
+- User attempts to access a photo through an arbitrary storage path.
+- User attempts to reuse an expired signed URL.
+- User attempts to use a signed URL after access revocation.
+- Unauthorized user attempts to export customer data.
+
+For every security test, expected behavior must be explicit.
+
+## 6.3 Multi-Company Collaboration Tests
+
+Demonstrate:
+
+- One customer workspace with two independent providers.
+- Each provider has different asset responsibilities.
+- Each provider can see only its authorized operational scope.
+- Neither provider can access the other's confidential commercial information.
+- Customer can see the operational history permitted by workspace policy.
+- Provider revocation does not remove customer history.
+
+## 6.4 Inspection Integrity Tests
+
+Test:
+
+- Draft creation.
+- Draft editing.
+- Submission.
+- Finalization.
+- Duplicate finalization.
+- Concurrent finalization.
+- Unauthorized finalization.
+- Direct modification after finalization.
+- Addendum creation.
+- Addendum approval.
+- Hash verification.
+- Missing photo.
+- Corrupted attachment.
+- Failed offline upload.
+
+## 6.5 Work Order Tests
+
+Test the entire lifecycle, including:
+
+- Creation from finding.
+- Manual creation.
+- Approval.
+- Assignment.
+- Execution.
+- Parts allocation.
+- Verification.
+- Customer sign-off.
+- Closure.
+- Rejection.
+- Cancellation.
+- Invalid transition.
+- Unauthorized modification.
+- Duplicate creation.
+
+## 6.6 Inventory Tests
+
+Test:
+
+- Stock receiving.
+- Reservation.
+- Concurrent reservation.
+- Insufficient stock.
+- Reservation release.
+- Consumption.
+- Return.
+- Adjustment.
+- Consignment reconciliation.
+- Unauthorized ownership modification.
+- Duplicate stock movement.
+- Negative stock prevention.
+
+## 6.7 Offline Tests
+
+Test:
+
+- Inspection creation without internet.
+- Offline draft persistence.
+- Photo queue.
+- Reconnection.
+- Synchronization.
+- Retry after timeout.
+- Duplicate request.
+- Two devices submitting conflicting updates.
+- Access revoked while offline.
+- Storage upload failure.
+- App restart before synchronization.
+- Partial synchronization recovery.
+
+## 6.8 Lifecycle Tests
+
+Test each lifecycle independently.
+
+Examples:
+
+- Service Engagement terminated while workspace remains active.
+- Provider revoked while customer continues using the workspace.
+- SaaS subscription suspended while customer retains permitted export rights.
+- SaaS subscription renewed after suspension.
+- Workspace archived while historical records remain governed by retention policy.
+- Legal hold blocks scheduled deletion.
+
+## 6.9 Migration and Recovery Tests
+
+Test:
+
+- Successful backup.
+- Failed backup verification.
+- Successful shadow migration.
+- Missing migrated records.
+- Duplicate migrated records.
+- Data mismatch.
+- Migration interrupted.
+- Write freeze.
+- Cutover.
+- Rollback.
+- Post-cutover verification.
+
+## 6.10 Performance and Reliability Tests
+
+Define realistic load test scenarios.
+
+At minimum examine:
+
+- Concurrent users.
+- Inspection creation volume.
+- Photo upload volume.
+- Work order queries.
+- Inventory transactions.
+- Dashboard aggregation.
+- Pagination.
+- Firestore transaction contention.
+- Backend function timeouts.
+- Offline synchronization bursts.
+
+Do not invent production performance guarantees.
+
+Define proposed test targets separately from confirmed non-functional requirements.
+
+---
+
+# 7. END-TO-END PRODUCT DEMONSTRATION SCENARIOS
+
+In addition to individual test cases, create complete end-to-end scenarios that demonstrate how the product works.
+
+Use realistic fictional companies and assets.
+
+At minimum, build these scenarios:
+
+## Scenario 1 — Managed Service: Complete Inspection to Maintenance
+
+Actors:
+
+- Customer Workspace Admin.
+- Customer Maintenance Supervisor.
+- Provider Inspector.
+- Provider Technician.
+- Warehouse Custodian.
+
+Workflow:
+
+1. Customer creates a workspace in Managed Service mode.
+2. Customer registers a site and conveyor assets.
+3. Customer invites a service provider.
+4. Provider accepts the invitation.
+5. Provider assigns an inspector.
+6. Inspector performs a conveyor inspection.
+7. Inspector records checklist results and photos.
+8. Inspector identifies damaged components.
+9. Inspection is submitted and finalized.
+10. Customer reviews the findings.
+11. Customer creates or approves a work order.
+12. Provider assigns a technician.
+13. Technician reserves required spare parts.
+14. Technician executes the work.
+15. Customer verifies the work.
+16. Work order is closed.
+17. Dashboard and maintenance history reflect the completed activity.
+
+Demonstrate the records, permissions, state changes, and audit events at every step.
+
+## Scenario 2 — Self-Managed SaaS
+
+Actors:
+
+- Customer Organization Admin.
+- Customer Workspace Admin.
+- Maintenance Supervisor.
+- Customer Inspector.
+- Customer Technician.
+
+Demonstrate that the customer operates the same core modules using its own personnel without requiring a manpower service engagement.
+
+## Scenario 3 — Multi-Provider Collaboration
+
+Create one customer workspace with:
+
+- Provider A responsible for conveyor belt inspection.
+- Provider B responsible for pulley and idler maintenance.
+- Customer maintenance team overseeing both.
+
+Demonstrate:
+
+- Separate responsibilities.
+- Shared operational visibility where authorized.
+- Private provider commercial records.
+- Cross-provider access denial.
+- Independent provider collaboration termination.
+
+## Scenario 4 — Offline Remote Site Inspection
+
+Demonstrate:
+
+- Device loses internet connection.
+- Inspector creates a draft.
+- Inspector captures checklist results and photos.
+- Data is stored locally.
+- Device reconnects.
+- Upload and synchronization begin.
+- Server validates authorization.
+- Duplicate retries are handled safely.
+- Inspection is finalized only after successful validation.
+
+Also demonstrate what happens if the inspector's access is revoked while offline.
+
+## Scenario 5 — Service Contract Termination
+
+Demonstrate:
+
+- Service Engagement termination.
+- Provider access revocation.
+- Customer retains inspection history.
+- Customer retains operational work orders.
+- Open work orders remain accessible.
+- Provider-owned and consignment inventory is reconciled.
+- Audit trail remains intact.
+
+## Scenario 6 — SaaS Subscription Suspension and Recovery
+
+Demonstrate:
+
+- Subscription expiration.
+- Grace period.
+- Read-only behavior.
+- Data export rights.
+- Suspension.
+- Subscription renewal.
+- Access restoration.
+
+Do not automatically delete customer operational data.
+
+## Scenario 7 — Inspection Correction Through Addendum
+
+Demonstrate:
+
+- Finalized inspection contains an incorrect observation.
+- Inspector submits an addendum with reason and correction.
+- Authorized supervisor approves it.
+- Original inspection remains unchanged.
+- Audit history shows both original and corrective records.
+
+## Scenario 8 — Inventory and Consignment Lifecycle
+
+Demonstrate:
+
+- Customer-owned stock.
+- Provider-owned stock.
+- Provider consignment stock.
+- Reservation against a work order.
+- Consumption.
+- Return.
+- Reconciliation.
+- Financial valuation isolation.
+
+For each scenario, provide:
+
+1. Initial system state.
+2. Actors and roles.
+3. Seed data.
+4. Step-by-step workflow.
+5. Expected UI behavior.
+6. Expected database changes.
+7. Expected backend operations.
+8. Expected audit events.
+9. Expected authorization decisions.
+10. Final system state.
+
+---
+
+# 8. TEST DATA AND DEMONSTRATION ENVIRONMENT
+
+Create a complete fictional seed-data specification.
+
+Use fictional companies, such as:
+
+- Customer: Nusantara Mining Operations.
+- Provider A: Apex Conveyor Services.
+- Provider B: Delta Mechanical Solutions.
+
+Create sample:
+
+- Organizations.
+- Users.
+- Roles.
+- Workspaces.
+- Sites.
+- Conveyor assets.
+- Components.
+- Asset responsibilities.
+- Service engagements.
+- Software subscriptions.
+- Inspections.
+- Inspection findings.
+- Inspection addendums.
+- Work orders.
+- Inventory items.
+- Stock reservations.
+- Stock movements.
+- Audit events.
+
+Include data that demonstrates:
+
+- Managed Service mode.
+- Self-Managed SaaS mode.
+- Multiple organizations.
+- Multiple providers.
+- Customer-owned inventory.
+- Provider-owned inventory.
+- Consignment inventory.
+- Good, Fair, Worn, and Damaged inspection results.
+- Open, in-progress, and completed work orders.
+- Confidential financial records.
+
+Never use real personal data or actual company confidential information.
+
+Separate test data from production data.
+
+Define how the test environment is reset safely between test runs.
+
+---
+
+# 9. UI AND FEATURE DEMONSTRATION COVERAGE
+
+Create a complete UI screen inventory based on the existing features.
+
+For every screen define:
+
+- Screen ID.
+- Screen name.
+- Primary user role.
+- Purpose.
+- Main UI components.
+- Available actions.
+- Required data.
+- Loading state.
+- Empty state.
+- Error state.
+- Permission-restricted state.
+- Mobile or desktop considerations.
+- Related test cases.
+
+At minimum consider screens for:
+
+- Login and registration.
+- Organization selection.
+- Organization management.
+- Workspace selection.
+- Workspace dashboard.
+- Site management.
+- Asset management.
+- Asset details and history.
+- Inspection checklist.
+- Inspection detail.
+- Inspection findings.
+- Inspection addendum.
+- Work order list.
+- Work order detail.
+- Work order execution.
+- Inventory dashboard.
+- Inventory item detail.
+- Stock transaction.
+- Service Engagement management.
+- SaaS subscription management.
+- Collaboration and invitations.
+- Reports and analytics.
+- User and role management.
+- Audit log.
+- Offline synchronization status.
+
+Do not claim a screen is already implemented if it is only specified.
+
+---
+
+# 10. TEST AUTOMATION STRATEGY
+
+Define how the test cases can be implemented and executed.
+
+Use a practical strategy compatible with the existing technology direction:
+
+- React frontend.
+- Firebase Authentication.
+- Cloud Firestore.
+- Firebase Storage.
+- Cloud Functions or Cloud Run where appropriate.
+- Firebase Emulator Suite.
+- Automated security-rule tests.
+- Backend integration tests.
+- UI end-to-end tests.
+
+Specify which tests should be:
+
+1. Unit tests.
+2. Firestore Security Rules tests.
+3. Storage Security Rules tests.
+4. Backend integration tests.
+5. Frontend component tests.
+6. End-to-end UI tests.
+7. Concurrency tests.
+8. Performance tests.
+9. Recovery tests.
+
+For Firebase security testing, explain how to use the Emulator Suite and test both authorized and unauthorized users.
+
+Provide a proposed folder structure for the test suite.
+
+Provide representative test code examples for the most critical security scenarios.
+
+Do not generate the complete production application code.
+
+Do not claim test cases have passed unless they have actually been executed in a test environment.
+
+---
+
+# 11. REQUIREMENT TRACEABILITY
+
+Create a traceability matrix linking:
+
+`Business Requirement → Feature → Architecture Component → Collection → Backend Operation → Security Rule → UI Screen → Test Case`
+
+Every major business requirement and feature must have at least one corresponding test case.
+
+Every critical security requirement must have at least one negative test.
+
+Every state transition must have at least one valid and one invalid transition test.
+
+Every backend transaction must have success, duplicate-request, and failure-recovery tests where applicable.
+
+Identify any requirements without test coverage.
+
+---
+
+# 12. FINAL DOCUMENT STRUCTURE
+
+Consolidate the final output under the existing title:
+
+# ENTERPRISE ARCHITECTURE SPECIFICATION V2.1
+## Final Technical Baseline and Comprehensive Test Coverage
+
+Use the following structure:
+
+1. Executive Summary.
+2. Preserved Business and Product Architecture.
+3. Final Technical Corrections.
+4. Complete Firestore Security Rules.
+5. Complete Firebase Storage Security Design.
+6. Organization and Workspace Authorization.
+7. Commercial Data Isolation.
+8. Inspection Integrity and Finalization.
+9. Work Order State and Authorization.
+10. Complete Inventory Transaction Architecture.
+11. Offline Synchronization and Idempotency.
+12. Migration and Recovery.
+13. Complete Product Feature Inventory.
+14. Role and Permission Matrix.
+15. UI Screen Inventory.
+16. Comprehensive Test Case Library.
+17. End-to-End Product Demonstration Scenarios.
+18. Test Data and Seed Environment.
+19. Test Automation Strategy.
+20. Requirement Traceability Matrix.
+21. Remaining Business and Legal Decisions.
+22. Implementation Blockers.
+23. Final Readiness Assessment.
+
+Use tables and diagrams where they improve clarity.
+
+If the document becomes too long, divide it into clearly numbered parts while preserving one consistent V2.1 baseline.
+
+Do not omit test cases merely to shorten the output.
+
+---
+
+# 13. STRICT QUALITY CONTROL
+
+Before completing the document, perform the following checks:
+
+- Every collection in the architecture has a corresponding security policy.
+- Every important backend operation has authorization validation.
+- Every sensitive field is protected by document-level segregation where necessary.
+- Every critical state transition has authorization and validation rules.
+- Every immutable record has a tested immutability mechanism.
+- Every file operation has a defined authorization path.
+- Every offline operation has retry and conflict behavior.
+- Every important transaction has idempotency protection.
+- Every business feature has functional test coverage.
+- Every major user role has permission tests.
+- Every collaboration scenario has cross-organization isolation tests.
+- Every end-to-end scenario has initial and final system states.
+- Every test case has an expected result.
+- Every unresolved assumption is explicitly documented.
+
+If an architectural decision is not supported by the existing business requirements, do not invent it.
+
+Mark it as:
+
+`OPEN DECISION — BUSINESS CONFIRMATION REQUIRED`
+
+If a technical requirement cannot be securely implemented using the proposed technology, explain the limitation and propose a practical alternative.
+
+Do not label a design as production-ready merely because an example has been written.
+
+---
+
+# 14. FINAL READINESS GATE
+
+Evaluate the result using these statuses:
+
+- PASS — Fully specified and technically consistent.
+- CONDITIONAL — Specified, but dependent on a clearly identified decision or validation.
+- FAIL — A critical gap remains.
+
+The final assessment must cover:
+
+- Business architecture.
+- Organization and workspace isolation.
+- RBAC.
+- Firestore Security Rules.
+- Firebase Storage security.
+- Commercial data isolation.
+- Inspection integrity.
+- Work Order lifecycle.
+- Inventory transaction integrity.
+- Offline synchronization.
+- Idempotency.
+- Audit logging.
+- Subscription lifecycle.
+- Service Engagement lifecycle.
+- Data retention.
+- Migration and recovery.
+- UI feature coverage.
+- Test coverage.
+- Automated security validation.
+
+Do not automatically mark everything PASS.
+
+If critical gaps remain, clearly state what must be resolved.
+
+Distinguish:
+
+1. Architecture readiness.
+2. Implementation readiness.
+3. Production launch readiness.
+
+These are three different milestones.
+
+---
+
+# FINAL INSTRUCTION
+
+Keep the architecture version at V2.1.
+
+Do not create a new version number.
+
+Do not redesign the existing product.
+
+Correct and consolidate the current specification.
+
+Deliver a complete technical baseline and comprehensive test coverage package.
+
+The most important deliverable is not a document that claims the CMMS is secure.
+
+It is a document that defines exactly how the CMMS will be tested to prove that its business workflows, permissions, data isolation, and security controls behave as intended.
+
+Do not generate the full application yet.
+
+The next development stage will begin only after the technical baseline and test coverage have been reviewed and approved.

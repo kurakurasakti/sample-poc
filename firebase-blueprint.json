@@ -1,0 +1,460 @@
+{
+  "entities": {
+    "Asset": {
+      "title": "Asset",
+      "description": "Industrial conveyor asset definition",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Generated Asset ID e.g. CV-2026-001",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "name": {
+          "type": "string",
+          "description": "Conveyor line name",
+          "maxLength": 128
+        },
+        "location": {
+          "type": "string",
+          "description": "Plant area or section",
+          "maxLength": 128
+        },
+        "type": {
+          "type": "string",
+          "description": "Conveyor type: Belt, Roller, Screw, Overhead",
+          "maxLength": 64
+        },
+        "beltWidthMm": {
+          "type": "number",
+          "description": "Belt width in millimeters"
+        },
+        "lengthMeters": {
+          "type": "number",
+          "description": "Conveyor center-to-center length in meters"
+        },
+        "speedMps": {
+          "type": "number",
+          "description": "Belt operational speed in meters per second"
+        },
+        "status": {
+          "type": "string",
+          "description": "Operational status: active or deactivated",
+          "enum": ["active", "deactivated"]
+        },
+        "lastInspectedAt": {
+          "type": "string",
+          "description": "ISO date string of most recent inspection",
+          "maxLength": 64
+        },
+        "currentCondition": {
+          "type": "string",
+          "description": "Latest condition rating: good, fair, worn, damaged",
+          "enum": ["good", "fair", "worn", "damaged"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp",
+          "maxLength": 64
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last update timestamp",
+          "maxLength": 64
+        }
+      },
+      "required": ["id", "name", "location", "type", "status", "currentCondition"]
+    },
+    "Inspection": {
+      "title": "Inspection",
+      "description": "Conveyor inspection record with condition grades and findings",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Generated Inspection ID e.g. INSP-2026-0001",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "assetId": {
+          "type": "string",
+          "description": "ID of inspected conveyor",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "assetName": {
+          "type": "string",
+          "description": "Denormalized asset name",
+          "maxLength": 128
+        },
+        "inspectorName": {
+          "type": "string",
+          "description": "Name or email of inspector",
+          "maxLength": 128
+        },
+        "inspectorId": {
+          "type": "string",
+          "description": "User ID of inspector",
+          "maxLength": 128
+        },
+        "inspectionDate": {
+          "type": "string",
+          "description": "ISO date string of inspection",
+          "maxLength": 64
+        },
+        "overallCondition": {
+          "type": "string",
+          "description": "Overall condition: good, fair, worn, damaged",
+          "enum": ["good", "fair", "worn", "damaged"]
+        },
+        "findings": {
+          "type": "string",
+          "description": "Inspection findings and notes",
+          "maxLength": 4096
+        },
+        "recommendations": {
+          "type": "string",
+          "description": "Recommended maintenance actions",
+          "maxLength": 4096
+        },
+        "priority": {
+          "type": "string",
+          "description": "Maintenance urgency: low, medium, high, critical",
+          "enum": ["low", "medium", "high", "critical"]
+        },
+        "status": {
+          "type": "string",
+          "description": "Session status: DRAFT, IN_PROGRESS, READY_FOR_REVIEW, FINALIZED, CANCELLED",
+          "enum": ["DRAFT", "IN_PROGRESS", "READY_FOR_REVIEW", "FINALIZED", "CANCELLED"]
+        },
+        "site": {
+          "type": "string",
+          "description": "Plant area / conveyor location",
+          "maxLength": 128
+        },
+        "lastSavedAt": {
+          "type": "string",
+          "description": "ISO timestamp of most recent progressive save",
+          "maxLength": 64
+        },
+        "finalizedAt": {
+          "type": "string",
+          "description": "ISO timestamp when session was finalized",
+          "maxLength": 64
+        },
+        "finalizedBy": {
+          "type": "string",
+          "description": "Actor who finalized the inspection session",
+          "maxLength": 128
+        },
+        "version": {
+          "type": "number",
+          "description": "Optimistic concurrency revision counter"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO creation timestamp",
+          "maxLength": 64
+        }
+      },
+      "required": ["id", "assetId", "assetName", "inspectionDate", "overallCondition", "findings"]
+    },
+    "ComponentDraft": {
+      "title": "ComponentDraft",
+      "description": "Progressive per-component inspection state saved independently prior to finalization",
+      "type": "object",
+      "properties": {
+        "componentName": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "componentSlug": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "status": {
+          "type": "string",
+          "enum": ["NOT_STARTED", "IN_PROGRESS", "SAVED", "COMPLETED", "NOT_APPLICABLE"]
+        },
+        "condition": {
+          "type": "string",
+          "enum": ["good", "fair", "worn", "damaged"]
+        },
+        "observations": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "findings": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "recommendations": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "notApplicableReason": {
+          "type": "string",
+          "maxLength": 1024
+        },
+        "savedAt": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "version": {
+          "type": "number"
+        }
+      },
+      "required": ["componentName", "componentSlug", "status"]
+    },
+    "MaintenanceUpdate": {
+      "title": "MaintenanceUpdate",
+      "description": "Corrective maintenance progress update and supervisor verification",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Maintenance update ID e.g. MAINT-2026-0001",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "inspectionId": {
+          "type": "string",
+          "description": "Associated inspection ID",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "assetId": {
+          "type": "string",
+          "description": "Target conveyor asset ID",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "componentName": {
+          "type": "string",
+          "description": "Sub-component under repair",
+          "maxLength": 128
+        },
+        "initialInspectionCondition": {
+          "type": "string",
+          "description": "Immutable copy of original audit condition",
+          "enum": ["good", "fair", "worn", "damaged"]
+        },
+        "currentCondition": {
+          "type": "string",
+          "description": "Reported condition at update",
+          "enum": ["good", "fair", "worn", "damaged"]
+        },
+        "progressStatus": {
+          "type": "string",
+          "description": "Maintenance lifecycle progress status",
+          "enum": ["diagnosing", "parts_pending", "in_progress", "completed_pending_verification", "verified_closed"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO creation timestamp",
+          "maxLength": 64
+        }
+      },
+      "required": ["id", "inspectionId", "assetId", "componentName", "initialInspectionCondition", "currentCondition", "progressStatus"]
+    },
+    "ComponentReport": {
+      "title": "ComponentReport",
+      "description": "Independent component-level inspection report generated from an inspection session",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Component Report ID e.g. INSP-2026-0001-C01",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "sessionId": {
+          "type": "string",
+          "description": "Parent inspection session ID",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "workspaceId": {
+          "type": "string",
+          "description": "Workspace isolation boundary ID",
+          "maxLength": 128
+        },
+        "assetId": {
+          "type": "string",
+          "description": "Target conveyor asset ID",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 64
+        },
+        "componentName": {
+          "type": "string",
+          "description": "Evaluated mechanical component name",
+          "maxLength": 128
+        },
+        "originalCondition": {
+          "type": "string",
+          "enum": ["good", "fair", "worn", "damaged"]
+        },
+        "currentCondition": {
+          "type": "string",
+          "enum": ["good", "fair", "worn", "damaged"]
+        },
+        "isFinalized": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "maxLength": 64
+        }
+      },
+      "required": ["id", "sessionId", "assetId", "componentName", "originalCondition", "currentCondition"]
+    },
+    "PhotoEvidence": {
+      "title": "PhotoEvidence",
+      "description": "Structured metadata for inspection, maintenance, verification, and legacy evidence photographs",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "workspaceId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "inspectionSessionId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "componentReportId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "assetId": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "componentName": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "photoCategory": {
+          "type": "string",
+          "enum": ["INSPECTION", "MAINTENANCE_BEFORE", "MAINTENANCE_DURING", "MAINTENANCE_AFTER", "VERIFICATION", "GENERAL_SESSION_EVIDENCE"]
+        },
+        "classificationStatus": {
+          "type": "string",
+          "enum": ["assigned", "unassigned", "general_session_evidence"]
+        },
+        "storagePath": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "uploadedById": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "isFinalized": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "maxLength": 64
+        }
+      },
+      "required": ["id", "workspaceId", "inspectionSessionId", "photoCategory", "classificationStatus", "uploadedById"]
+    },
+    "PhotoAuditEvent": {
+      "title": "PhotoAuditEvent",
+      "description": "Immutable audit trail event for photo association, classification, maintenance attachment, and legacy migration",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "photoId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "eventType": {
+          "type": "string",
+          "enum": [
+            "PHOTO_UPLOADED",
+            "PHOTO_UPLOAD_FAILED",
+            "PHOTO_ASSOCIATED_COMPONENT",
+            "PHOTO_CLASSIFICATION_CORRECTED",
+            "PHOTO_MARKED_GENERAL",
+            "PHOTO_ATTACHED_MAINTENANCE",
+            "PHOTO_ATTACHED_VERIFICATION",
+            "PHOTO_REMOVED",
+            "LEGACY_MIGRATION_COMPLETED"
+          ]
+        },
+        "actorId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "actorName": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "workspaceId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "inspectionSessionId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "details": {
+          "type": "string",
+          "maxLength": 1024
+        },
+        "timestamp": {
+          "type": "string",
+          "maxLength": 64
+        }
+      },
+      "required": ["id", "photoId", "eventType", "actorId", "workspaceId", "inspectionSessionId", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/assets/{assetId}": {
+      "schema": "Asset",
+      "description": "Conveyor assets catalog and state"
+    },
+    "/inspections/{inspectionId}": {
+      "schema": "Inspection",
+      "description": "Finalized immutable inspection logs, conditions, and technician observations"
+    },
+    "/inspection_drafts/{sessionId}": {
+      "schema": "Inspection",
+      "description": "Owner-isolated progressive inspection drafts and in-progress sessions prior to finalization"
+    },
+    "/inspection_drafts/{sessionId}/component_drafts/{compSlug}": {
+      "schema": "ComponentDraft",
+      "description": "Independent component-level draft records saved progressively inside a session"
+    },
+    "/maintenance_updates/{updateId}": {
+      "schema": "MaintenanceUpdate",
+      "description": "Maintenance updates and supervisor certification records"
+    },
+    "/component_reports/{reportId}": {
+      "schema": "ComponentReport",
+      "description": "Independent component-level inspection reports and component-specific photos"
+    },
+    "/photo_evidence/{photoId}": {
+      "schema": "PhotoEvidence",
+      "description": "Authoritative photo evidence classification, storage path, and immutability metadata"
+    },
+    "/photo_audit_events/{eventId}": {
+      "schema": "PhotoAuditEvent",
+      "description": "Append-only audit trail for photo uploads, associations, and legacy classifications"
+    }
+  }
+}

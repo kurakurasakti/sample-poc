@@ -1,0 +1,288 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidAsset(data) {
+      return data.id is string && data.id.size() > 0 && data.id.size() <= 64
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 128
+        && data.location is string && data.location.size() > 0 && data.location.size() <= 128
+        && data.type is string && data.type.size() > 0 && data.type.size() <= 64
+        && data.status in ['active', 'deactivated']
+        && data.currentCondition in ['good', 'fair', 'worn', 'damaged'];
+    }
+
+    function isValidFinalizedInspection(data) {
+      return data.id is string && data.id.size() > 0 && data.id.size() <= 128
+        && data.assetId is string && data.assetId.size() > 0 && data.assetId.size() <= 64
+        && data.assetName is string && data.assetName.size() > 0 && data.assetName.size() <= 128
+        && data.workspaceId is string && data.workspaceId.size() > 0 && data.workspaceId.size() <= 128
+        && data.inspectorId is string && data.inspectorId.size() > 0 && data.inspectorId.size() <= 128
+        && data.overallCondition in ['good', 'fair', 'worn', 'damaged']
+        && data.findings is string && data.findings.size() > 0 && data.findings.size() <= 4096
+        && (!('recommendations' in data) || (data.recommendations is string && data.recommendations.size() <= 4096))
+        && (!('status' in data) || data.status == 'FINALIZED');
+    }
+
+    function isValidMaintenanceUpdate(data) {
+      return data.id is string && data.id.size() > 0 && data.id.size() <= 64
+        && data.inspectionId is string && data.inspectionId.size() > 0 && data.inspectionId.size() <= 64
+        && data.assetId is string && data.assetId.size() > 0 && data.assetId.size() <= 64
+        && data.componentName is string && data.componentName.size() > 0 && data.componentName.size() <= 128
+        && data.technicianId is string && data.technicianId.size() > 0 && data.technicianId.size() <= 128
+        && data.initialInspectionCondition in ['good', 'fair', 'worn', 'damaged']
+        && data.currentCondition in ['good', 'fair', 'worn', 'damaged']
+        && data.progressStatus in ['diagnosing', 'parts_pending', 'in_progress', 'completed_pending_verification', 'verified_closed'];
+    }
+
+    function isValidComponentReport(data) {
+      return data.id is string && data.id.size() > 0 && data.id.size() <= 64
+        && data.sessionId is string && data.sessionId.size() > 0 && data.sessionId.size() <= 64
+        && data.workspaceId is string && data.workspaceId.size() > 0 && data.workspaceId.size() <= 128
+        && data.assetId is string && data.assetId.size() > 0 && data.assetId.size() <= 64
+        && data.componentName is string && data.componentName.size() > 0 && data.componentName.size() <= 128
+        && data.originalCondition in ['good', 'fair', 'worn', 'damaged']
+        && data.currentCondition in ['good', 'fair', 'worn', 'damaged']
+        && (!('inspectorId' in data) || (data.inspectorId is string && data.inspectorId.size() <= 128))
+        && (!('isFinalized' in data) || data.isFinalized == true);
+    }
+
+    function isValidPhotoEvidence(data) {
+      return data.id is string && data.id.size() > 0 && data.id.size() <= 128
+        && data.workspaceId is string && data.workspaceId.size() > 0 && data.workspaceId.size() <= 128
+        && data.inspectionSessionId is string && data.inspectionSessionId.size() > 0 && data.inspectionSessionId.size() <= 128
+        && data.photoCategory in ['INSPECTION', 'MAINTENANCE_BEFORE', 'MAINTENANCE_DURING', 'MAINTENANCE_AFTER', 'VERIFICATION', 'GENERAL_SESSION_EVIDENCE']
+        && data.classificationStatus in ['assigned', 'unassigned', 'general_session_evidence']
+        && data.uploadedById is string && data.uploadedById.size() > 0 && data.uploadedById.size() <= 128
+        && data.url is string && data.url.size() <= 2048
+        && (!('storagePath' in data) || (data.storagePath is string && data.storagePath.size() <= 512 && data.storagePath.matches('^workspaces/' + data.workspaceId + '/.*')))
+        && (!('componentName' in data) || (data.componentName is string && data.componentName.size() <= 128));
+    }
+
+    function isValidPhotoAuditEvent(data) {
+      return data.id is string && data.id.size() > 0 && data.id.size() <= 128
+        && data.photoId is string && data.photoId.size() > 0 && data.photoId.size() <= 128
+        && data.eventType in [
+          'PHOTO_UPLOADED',
+          'PHOTO_UPLOAD_FAILED',
+          'PHOTO_ASSOCIATED_COMPONENT',
+          'PHOTO_CLASSIFICATION_CORRECTED',
+          'PHOTO_MARKED_GENERAL',
+          'PHOTO_ATTACHED_MAINTENANCE',
+          'PHOTO_ATTACHED_VERIFICATION',
+          'PHOTO_REMOVED',
+          'LEGACY_MIGRATION_COMPLETED'
+        ]
+        && data.actorId is string && data.actorId.size() > 0 && data.actorId.size() <= 128
+        && (data.actorId == request.auth.uid || data.actorId == 'system-migration')
+        && data.workspaceId is string && data.workspaceId.size() > 0 && data.workspaceId.size() <= 128
+        && data.inspectionSessionId is string && data.inspectionSessionId.size() > 0 && data.inspectionSessionId.size() <= 128
+        && data.details is string && data.details.size() <= 1024
+        && data.timestamp is string && data.timestamp.size() <= 64;
+    }
+
+    function isValidDraftSession(data) {
+      return data.id is string && data.id.size() > 0 && data.id.size() <= 128
+        && data.assetId is string && data.assetId.size() > 0 && data.assetId.size() <= 64
+        && data.inspectorId is string && data.inspectorId.size() > 0 && data.inspectorId.size() <= 128
+        && data.workspaceId is string && data.workspaceId.size() > 0 && data.workspaceId.size() <= 128
+        && data.status in ['DRAFT', 'IN_PROGRESS', 'READY_FOR_REVIEW', 'FINALIZED', 'CANCELLED']
+        && (!('findings' in data) || (data.findings is string && data.findings.size() <= 4096))
+        && (!('recommendations' in data) || (data.recommendations is string && data.recommendations.size() <= 4096));
+    }
+
+    function isValidComponentDraft(data) {
+      return data.componentName is string && data.componentName.size() > 0 && data.componentName.size() <= 128
+        && data.componentSlug is string && data.componentSlug.size() > 0 && data.componentSlug.size() <= 128
+        && data.status in ['NOT_STARTED', 'IN_PROGRESS', 'SAVED', 'COMPLETED', 'NOT_APPLICABLE']
+        && data.inspectorId is string && data.inspectorId == request.auth.uid
+        && (!('observations' in data) || (data.observations is string && data.observations.size() <= 2048))
+        && (!('findings' in data) || (data.findings is string && data.findings.size() <= 2048))
+        && (!('recommendations' in data) || (data.recommendations is string && data.recommendations.size() <= 2048))
+        && (!('notApplicableReason' in data) || (data.notApplicableReason is string && data.notApplicableReason.size() <= 1024));
+    }
+
+    // Default deny all other paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Assets catalog (no hard delete; lifecycle via status = 'deactivated')
+    match /assets/{assetId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(assetId)
+        && isValidAsset(incoming())
+        && incoming().id == assetId;
+      allow update: if isSignedIn() && isValidId(assetId)
+        && isValidAsset(incoming())
+        && incoming().id == existing().id;
+      allow delete: if false;
+    }
+
+    // Private / Progressive Inspection Drafts (Owner & Workspace Isolated)
+    match /inspection_drafts/{sessionId} {
+      allow read: if isSignedIn() && (resource == null || existing().inspectorId == request.auth.uid);
+      allow create: if isSignedIn() && isValidId(sessionId)
+        && isValidDraftSession(incoming())
+        && incoming().id == sessionId
+        && incoming().inspectorId == request.auth.uid
+        && incoming().status in ['DRAFT', 'IN_PROGRESS', 'READY_FOR_REVIEW'];
+      allow update: if isSignedIn() && isValidId(sessionId)
+        && isValidDraftSession(incoming())
+        && existing().inspectorId == request.auth.uid
+        && existing().status != 'FINALIZED'
+        && existing().status != 'CANCELLED'
+        && incoming().id == existing().id
+        && incoming().inspectorId == existing().inspectorId
+        && incoming().workspaceId == existing().workspaceId
+        && incoming().assetId == existing().assetId;
+      allow delete: if false;
+
+      // Per-component independent draft documents locked after parent FINALIZED / CANCELLED
+      match /component_drafts/{compSlug} {
+        allow read: if isSignedIn()
+          && get(/databases/$(database)/documents/inspection_drafts/$(sessionId)).data.inspectorId == request.auth.uid;
+        allow create, update: if isSignedIn() && isValidId(compSlug)
+          && isValidComponentDraft(incoming())
+          && (!exists(/databases/$(database)/documents/inspection_drafts/$(sessionId))
+              || (get(/databases/$(database)/documents/inspection_drafts/$(sessionId)).data.inspectorId == request.auth.uid
+                  && get(/databases/$(database)/documents/inspection_drafts/$(sessionId)).data.status != 'FINALIZED'
+                  && get(/databases/$(database)/documents/inspection_drafts/$(sessionId)).data.status != 'CANCELLED'))
+          && getAfter(/databases/$(database)/documents/inspection_drafts/$(sessionId)).data.inspectorId == request.auth.uid
+          && getAfter(/databases/$(database)/documents/inspection_drafts/$(sessionId)).data.status != 'FINALIZED'
+          && getAfter(/databases/$(database)/documents/inspection_drafts/$(sessionId)).data.status != 'CANCELLED';
+        allow delete: if false;
+      }
+    }
+
+    // Finalized Inspections Audit Log (Original Audit Fields Permanently Immutable)
+    match /inspections/{inspectionId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(inspectionId)
+        && isValidFinalizedInspection(incoming())
+        && incoming().id == inspectionId
+        && incoming().inspectorId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(inspectionId)
+        && isValidFinalizedInspection(incoming())
+        && incoming().id == existing().id
+        && incoming().inspectorId == existing().inspectorId
+        && incoming().assetId == existing().assetId
+        && incoming().overallCondition == existing().overallCondition
+        && incoming().findings == existing().findings
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'maintenanceStatus',
+          'latestReportedCondition',
+          'latestVerifiedCondition',
+          'currentCondition',
+          'componentCurrentConditions',
+          'verifiedAt',
+          'verifiedBy',
+          'photos',
+          'generalPhotos'
+        ]);
+      allow delete: if false;
+    }
+
+    // Corrective maintenance updates and supervisor certifications (immutable once verified_closed; never deleted)
+    match /maintenance_updates/{updateId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(updateId)
+        && isValidMaintenanceUpdate(incoming())
+        && incoming().id == updateId
+        && incoming().technicianId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(updateId)
+        && isValidMaintenanceUpdate(incoming())
+        && existing().progressStatus != 'verified_closed'
+        && incoming().id == existing().id
+        && incoming().inspectionId == existing().inspectionId
+        && incoming().assetId == existing().assetId
+        && incoming().componentName == existing().componentName
+        && incoming().initialInspectionCondition == existing().initialInspectionCondition
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'progressStatus',
+          'verification',
+          'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    // Component-level inspection reports with independent lifecycles (original baseline & report identity immutable; never deleted)
+    match /component_reports/{reportId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(reportId)
+        && isValidComponentReport(incoming())
+        && incoming().id == reportId
+        && incoming().inspectorId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(reportId)
+        && isValidComponentReport(incoming())
+        && incoming().id == existing().id
+        && incoming().sessionId == existing().sessionId
+        && incoming().workspaceId == existing().workspaceId
+        && incoming().assetId == existing().assetId
+        && incoming().componentName == existing().componentName
+        && incoming().originalCondition == existing().originalCondition
+        && incoming().inspectorId == existing().inspectorId
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'currentCondition',
+          'latestReportedCondition',
+          'latestVerifiedCondition',
+          'maintenanceStatus',
+          'verifiedBy',
+          'verifiedAt',
+          'verificationNotes',
+          'photos',
+          'photoIds',
+          'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    // Photo evidence metadata with finalized immutability & workspace isolation
+    match /photo_evidence/{photoId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(photoId)
+        && isValidPhotoEvidence(incoming())
+        && incoming().id == photoId
+        && incoming().uploadedById == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(photoId)
+        && isValidPhotoEvidence(incoming())
+        && incoming().id == existing().id
+        && incoming().workspaceId == existing().workspaceId
+        && incoming().inspectionSessionId == existing().inspectionSessionId
+        && incoming().uploadedById == existing().uploadedById
+        && (!('assetId' in existing()) || incoming().assetId == existing().assetId)
+        && (
+          // Unassigned legacy photos can be classified once
+          existing().classificationStatus == 'unassigned'
+          // Non-finalized drafts can be updated by uploader
+          || (existing().isFinalized != true && existing().uploadedById == request.auth.uid)
+        );
+      allow delete: if isSignedIn() && isValidId(photoId)
+        && existing().isFinalized != true
+        && existing().uploadedById == request.auth.uid;
+    }
+
+    // Append-only photo evidence audit trail
+    match /photo_audit_events/{eventId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(eventId)
+        && isValidPhotoAuditEvent(incoming())
+        && incoming().id == eventId;
+      allow update, delete: if false;
+    }
+  }
+}
